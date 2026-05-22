@@ -1,0 +1,8 @@
+services:
+  proxy-httpd:
+    build:
+      context: .
+    image: discord-proxy-httpd:latest
+    container_name: discord_proxy_httpd
+    ports:
+      - '3000:3000'
