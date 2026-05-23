@@ -55,6 +55,7 @@ const webhooks: FastifyPluginAsync = async (fastify) => {
     method: ['GET', 'POST', 'PATCH', 'DELETE'],
     url: '/:id/:token',
     handler: handleDiscordRequest,
+    preHandler: fastify.authenticate,
   });
 
   /**
@@ -66,6 +67,7 @@ const webhooks: FastifyPluginAsync = async (fastify) => {
     method: ['GET', 'PATCH', 'DELETE'],
     url: '/:id/:token/messages/:messageId',
     handler: handleDiscordRequest,
+    preHandler: fastify.authenticate,
   });
 };
 
