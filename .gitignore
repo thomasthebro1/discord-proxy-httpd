@@ -1,3 +1,9 @@
-node_modules
+# Dependencies & Package Managers
+node_modules/
 .yarn/install-state.gz
-dist
+
+# Build Output
+dist/
+
+# Sensitive Environment Secrets
+.env

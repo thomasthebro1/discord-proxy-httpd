@@ -2,6 +2,8 @@ services:
   proxy-httpd:
     build:
       context: .
+    env_file:
+      - .env
     image: discord-proxy-httpd:latest
     container_name: discord_proxy_httpd
     ports:

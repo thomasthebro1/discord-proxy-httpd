@@ -3,6 +3,7 @@ import app from './app.js';
 
 const server = Fastify({
   logger: true,
+  trustProxy: true,
 });
 
 // Register our autoload logic
