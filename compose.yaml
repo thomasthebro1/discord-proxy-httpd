@@ -2,11 +2,10 @@ services:
   jaProxy-httpd:
     build:
       context: .
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
     container_name: jaProxy_httpd
-    # env_file: .env
+    network_mode: 'host'
+    #env_file: .env
     image: japroxy-httpd:latest
-    ports:
-      - '3000:3000'
+    #ports:
+    #- '3000:3000'
     restart: unless-stopped
