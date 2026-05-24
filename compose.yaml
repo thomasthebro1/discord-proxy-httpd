@@ -3,7 +3,6 @@ services:
     build:
       context: .
     container_name: jaProxy_httpd
-    env_file: .env
     image: japroxy-httpd:latest
     networks:
       - proxy-inet
