@@ -3,17 +3,8 @@ services:
     build:
       context: .
     container_name: jaProxy_httpd
-    env_file: .env
+    # env_file: .env
     image: japroxy-httpd:latest
-    networks:
-      - proxy-inet
     ports:
       - '3000:3000'
     restart: unless-stopped
-
-networks:
-  proxy-inet:
-    ipam:
-      driver: default
-      config:
-        - subnet: 10.5.0.0/16

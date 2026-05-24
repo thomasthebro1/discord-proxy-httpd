@@ -4,7 +4,7 @@ node_modules/
 
 # Build Output
 dist/
+src/lib/prisma
 
 # Sensitive Environment Secrets
 .env
-/generated/prisma
