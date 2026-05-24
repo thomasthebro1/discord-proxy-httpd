@@ -1,10 +1,12 @@
+import 'dotenv/config';
 import Fastify from 'fastify';
 import app from './app.js';
+import { ZodTypeProvider } from 'fastify-type-provider-zod';
 
 const server = Fastify({
   logger: true,
   trustProxy: true,
-});
+}).withTypeProvider<ZodTypeProvider>();
 
 // Register our autoload logic
 server.register(app);
