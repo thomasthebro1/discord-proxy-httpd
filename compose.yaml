@@ -1,8 +1,17 @@
 services:
-  proxy-httpd:
+  jaProxy-httpd:
     build:
       context: .
-    image: discord-proxy-httpd:latest
-    container_name: discord_proxy_httpd
+    container_name: jaProxy_httpd
+    env_file: .env
+    image: japroxy-httpd:latest
+    networks:
+      - proxy-inet
     ports:
       - '3000:3000'
+    restart: unless-stopped
+
+networks:
+  proxy-inet:
+    driver: bridge
+    name: proxy_inet

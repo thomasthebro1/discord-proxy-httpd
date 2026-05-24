@@ -7,3 +7,4 @@ dist/
 
 # Sensitive Environment Secrets
 .env
+/generated/prisma
