@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum AccessType {
+  WHITELIST
+  BLACKLIST
+}
+
+model GlobalUserLicense {
+  id           String     @id @default(uuid())
+  robloxUserId BigInt     @unique
+  accessType   AccessType @default(BLACKLIST)
+  reason       String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([robloxUserId])
+}
+
+model GlobalGroupLicense {
+  id            String     @id @default(uuid())
+  robloxGroupId BigInt     @unique
+  accessType    AccessType @default(BLACKLIST)
+  reason        String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([robloxGroupId])
+}
+
+model Product {
+  id            String         @id @default(uuid())
+  name          String         @unique
+  description   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  userLicenses  UserLicense[]
+  groupLicenses GroupLicense[]
+}
+
+model UserLicense {
+  id           String     @id @default(uuid())
+  robloxUserId BigInt
+  productId    String
+  accessType   AccessType @default(WHITELIST)
+  reason       String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([robloxUserId, productId])
+  @@index([robloxUserId])
+}
+
+model GroupLicense {
+  id            String     @id @default(uuid())
+  robloxGroupId BigInt
+  productId     String
+  accessType    AccessType @default(WHITELIST)
+  reason        String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([robloxGroupId, productId])
+  @@index([robloxGroupId])
+}
