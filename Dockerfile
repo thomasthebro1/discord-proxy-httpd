@@ -1,5 +1,5 @@
 # --- Base Stage ---
-FROM node:24-bullseye-slim AS base
+FROM node:24-bookworm-slim AS base
 
 WORKDIR /usr/src/app
 
@@ -10,7 +10,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get autoremove
 
-RUN corepack enable
+#RUN corepack enable
 
 COPY --chown=node:node yarn.lock .
 COPY --chown=node:node package.json .
