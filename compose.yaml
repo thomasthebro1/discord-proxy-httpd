@@ -3,7 +3,7 @@ services:
     build:
       context: .
     container_name: jaProxy_httpd
-    env_file: .env
+    # env_file: .env
     image: japroxy-httpd:latest
     ports:
       - '3000:3000'
