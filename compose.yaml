@@ -3,9 +3,8 @@ services:
     build:
       context: .
     container_name: jaProxy_httpd
-    network_mode: 'host'
-    #env_file: .env
+    env_file: .env
     image: japroxy-httpd:latest
-    #ports:
-    #- '3000:3000'
+    ports:
+      - '3000:3000'
     restart: unless-stopped
