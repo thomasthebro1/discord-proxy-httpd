@@ -3,13 +3,20 @@ import { z } from 'zod';
 import { AccessType } from '../../lib/prisma/enums.js';
 
 const licenses: FastifyPluginAsyncZod = async (fastify) => {
+  // Schema definitions
+  const baseResponse = {
+    allowed: z.boolean(),
+    type: z.string(),
+    entityType: z.enum(['USER', 'GROUP']),
+    entityId: z.string(),
+    reason: z.string().nullable(),
+  };
+
   fastify.get(
     '/verify-access',
     {
-      // Keeping the schema inline ensures fastify-type-provider-zod compiles it before AJV sees it
       schema: {
-        summary:
-          'Check if a Roblox user or their group has access to a product',
+        summary: 'Check if a Roblox user or their group has access',
         querystring: z
           .object({
             userId: z
@@ -26,22 +33,13 @@ const licenses: FastifyPluginAsyncZod = async (fastify) => {
             (data) =>
               (data.userId !== undefined) !== (data.groupId !== undefined),
             {
-              message:
-                'You must provide either userId OR groupId, but not both.',
+              message: 'Provide either userId OR groupId.',
               path: ['userId'],
             },
           ),
         response: {
-          200: z.object({
-            allowed: z.boolean(),
-            type: z.enum(['GLOBAL_WHITELIST', 'PRODUCT_WHITELIST', 'NONE']),
-            reason: z.string().nullable(),
-          }),
-          403: z.object({
-            allowed: z.boolean(),
-            type: z.enum(['GLOBAL_BLACKLIST', 'PRODUCT_BLACKLIST']),
-            reason: z.string().nullable(),
-          }),
+          200: z.object(baseResponse),
+          403: z.object(baseResponse),
           404: z.object({ message: z.string() }),
         },
       },
@@ -49,7 +47,10 @@ const licenses: FastifyPluginAsyncZod = async (fastify) => {
     async (request, reply) => {
       const { userId, groupId, productName } = request.query;
 
-      // Helper function to deduplicate responses
+      // Determine IDs and types
+      const entityType = userId !== undefined ? 'USER' : 'GROUP';
+      const entityId = (userId ?? groupId)!.toString();
+
       const handleRuleResponse = (
         rule: { accessType: AccessType; reason: string | null },
         scope: 'GLOBAL' | 'PRODUCT',
@@ -57,34 +58,29 @@ const licenses: FastifyPluginAsyncZod = async (fastify) => {
         const isBlacklist = rule.accessType === AccessType.BLACKLIST;
         return reply.status(isBlacklist ? 403 : 200).send({
           allowed: !isBlacklist,
-          type: `${scope}_${rule.accessType}` as any,
+          type: `${scope}_${rule.accessType}`,
+          entityType,
+          entityId, // Included in response
           reason: rule.reason,
         });
       };
 
-      // 1. Fetch the product first to ensure it exists
       const product = await fastify.prisma.product.findUnique({
         where: { name: productName },
       });
-
-      if (!product) {
+      if (!product)
         return reply
           .status(404)
           .send({ message: `Product '${productName}' not found.` });
-      }
 
-      console.log(userId, groupId);
-
-      // 2. Check Global Rules
+      // 1. Check Global Rules
       if (userId !== undefined) {
         const globalUserRule =
           await fastify.prisma.globalUserLicense.findUnique({
             where: { robloxUserId: userId },
           });
-        console.log(globalUserRule);
         if (globalUserRule) return handleRuleResponse(globalUserRule, 'GLOBAL');
-      }
-      if (groupId !== undefined) {
+      } else if (groupId !== undefined) {
         const globalGroupRule =
           await fastify.prisma.globalGroupLicense.findUnique({
             where: { robloxGroupId: groupId },
@@ -93,7 +89,7 @@ const licenses: FastifyPluginAsyncZod = async (fastify) => {
           return handleRuleResponse(globalGroupRule, 'GLOBAL');
       }
 
-      // 3. Check Product-Specific Rules
+      // 2. Check Product Rules
       if (userId !== undefined) {
         const productUserRule = await fastify.prisma.userLicense.findUnique({
           where: {
@@ -105,8 +101,7 @@ const licenses: FastifyPluginAsyncZod = async (fastify) => {
         });
         if (productUserRule)
           return handleRuleResponse(productUserRule, 'PRODUCT');
-      }
-      if (groupId !== undefined) {
+      } else if (groupId !== undefined) {
         const productGroupRule = await fastify.prisma.groupLicense.findUnique({
           where: {
             robloxGroupId_productId: {
@@ -119,11 +114,12 @@ const licenses: FastifyPluginAsyncZod = async (fastify) => {
           return handleRuleResponse(productGroupRule, 'PRODUCT');
       }
 
-      // 4. Default Fallback
       return reply.status(200).send({
         allowed: false,
         type: 'NONE',
-        reason: 'No blacklist or whitelist found for this product.',
+        entityType,
+        entityId,
+        reason: 'No blacklist or whitelist found.',
       });
     },
   );
