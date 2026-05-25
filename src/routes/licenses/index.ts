@@ -73,15 +73,18 @@ const licenses: FastifyPluginAsyncZod = async (fastify) => {
           .send({ message: `Product '${productName}' not found.` });
       }
 
+      console.log(userId, groupId);
+
       // 2. Check Global Rules
-      if (userId) {
+      if (userId !== undefined) {
         const globalUserRule =
           await fastify.prisma.globalUserLicense.findUnique({
             where: { robloxUserId: userId },
           });
+        console.log(globalUserRule);
         if (globalUserRule) return handleRuleResponse(globalUserRule, 'GLOBAL');
       }
-      if (groupId) {
+      if (groupId !== undefined) {
         const globalGroupRule =
           await fastify.prisma.globalGroupLicense.findUnique({
             where: { robloxGroupId: groupId },
@@ -91,7 +94,7 @@ const licenses: FastifyPluginAsyncZod = async (fastify) => {
       }
 
       // 3. Check Product-Specific Rules
-      if (userId) {
+      if (userId !== undefined) {
         const productUserRule = await fastify.prisma.userLicense.findUnique({
           where: {
             robloxUserId_productId: {
@@ -103,7 +106,7 @@ const licenses: FastifyPluginAsyncZod = async (fastify) => {
         if (productUserRule)
           return handleRuleResponse(productUserRule, 'PRODUCT');
       }
-      if (groupId) {
+      if (groupId !== undefined) {
         const productGroupRule = await fastify.prisma.groupLicense.findUnique({
           where: {
             robloxGroupId_productId: {
